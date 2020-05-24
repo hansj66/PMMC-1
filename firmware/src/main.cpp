@@ -20,10 +20,12 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoNvs.h>
+#include "automaton.h"
 
 extern String config_page;
 
 AsyncWebServer server(80);
+Automaton automaton;
 
 void notFound(AsyncWebServerRequest *request) 
 {
@@ -33,6 +35,9 @@ void notFound(AsyncWebServerRequest *request)
 void setup() 
 {
     Serial.begin(115200);
+
+    // Initialize the servo controller
+    automaton.begin();
 
     // Initialize non volatile storage for servo parameters
     NVS.begin();
@@ -73,8 +78,6 @@ void setup()
     // 1) "trim" - Adjusts servo position according to corresponding slider in configuration page
     server.on("/trim", HTTP_GET, [] (AsyncWebServerRequest *request) 
     {
-        // TODO:    1) Update PWM settings
-
         String id;
         String pos;
         if (request->hasParam("id")) 
@@ -87,13 +90,14 @@ void setup()
             pos = request->getParam("pos")->value();
             Serial.printf("Servo position: %s\n", pos.c_str());
         } 
+
+        automaton.trim(atoi(id.c_str()), atoi(pos.c_str()));
         request->send(200, "text/plain", "OK");
     });
 
     // 2) "save" - Stores all servo parameters in non volatile flash memory
     server.on("/save", HTTP_GET, [] (AsyncWebServerRequest *request) 
     {
-        // TODO:    1) Loop through servos and store in key value store (under name)
         String servoParam;
         char servo[5];
         String poseName = "default";
@@ -148,6 +152,29 @@ void setup()
 
         request->send(200, "text/html", "OK");
     });
+
+        // 1) "trim" - Adjusts servo position according to corresponding slider in configuration page
+    server.on("/enable", HTTP_GET, [] (AsyncWebServerRequest *request) 
+    {
+        String id;
+        String enable;
+        if (request->hasParam("id")) 
+        {
+            id = request->getParam("id")->value();
+            Serial.printf("Enable servo ID: %s\n", id.c_str());
+        } 
+        if (request->hasParam("enable")) 
+        {
+            enable = request->getParam("enable")->value();
+            Serial.printf("Enabled: %s\n", enable.c_str());
+        } 
+
+        bool bEnable = strcmp(enable.c_str(), "false");
+        automaton.enable(atoi(id.c_str()), bEnable);
+        request->send(200, "text/plain", "OK");
+    });
+
+
 
     server.onNotFound(notFound);
     server.begin();

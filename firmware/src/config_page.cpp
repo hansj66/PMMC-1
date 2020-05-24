@@ -16,6 +16,7 @@
 #include <Arduino.h>
 
 String config_page = R"TEMPLATE(
+String config_page = R"TEMPLATE(
 <!DOCTYPE html>
 <html>
 <head>
@@ -78,7 +79,7 @@ String config_page = R"TEMPLATE(
       row.insertCell(0).innerHTML= 'Ankle (#' + servoId + ')';
 
 
-      row.insertCell(1).innerHTML= '<input type="range" min="0" max="180" class="slider" id="servoSlider' + servoId + '" onchange="servoAdjust(' + servoId + ',' + this.value + ')"/>';
+      row.insertCell(1).innerHTML= '<input type="range" min="200" max="400" class="slider" id="servoSlider' + servoId + '" onchange="servoAdjust(' + servoId + ',' + this.value + ')"/>';
       row.insertCell(2).innerHTML= '<p><span id="servoPos' + servoId + '"></span></p>';
       row.insertCell(3).innerHTML= '<input type="checkbox" id="servo' + servoId + '" name="servo' + servoId + '" value="servo' + servoId + '" onclick="enable_servo(' + servoId + ',this)">';
     }
@@ -109,6 +110,7 @@ String config_page = R"TEMPLATE(
     {
       var slider = document.getElementById("servoSlider" + id);
       var servoP = document.getElementById("servoPos" + id);
+
       servoP.innerHTML = slider.value;
       slider.oninput = function() 
       {
@@ -116,13 +118,13 @@ String config_page = R"TEMPLATE(
         servoP.innerHTML = this.value;
       }
 
-      $.get("/trim?id=" + id + "&pos=" + pos); 
+      $.get("/trim?id=" + id + "&pos=" + slider.value); 
       {Connection: close};
     }
   
     function enable_servo(id, cb) 
     {
-      $.get("/enable?id=1&enable=" + cb.checked + "&");
+      $.get("/enable?id=" + id + "&enable=" + cb.checked);
       {Connection: close};
     }
 
