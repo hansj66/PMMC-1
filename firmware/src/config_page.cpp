@@ -16,7 +16,6 @@
 #include <Arduino.h>
 
 String config_page = R"TEMPLATE(
-String config_page = R"TEMPLATE(
 <!DOCTYPE html>
 <html>
 <head>
@@ -79,7 +78,7 @@ String config_page = R"TEMPLATE(
       row.insertCell(0).innerHTML= 'Ankle (#' + servoId + ')';
 
 
-      row.insertCell(1).innerHTML= '<input type="range" min="200" max="400" class="slider" id="servoSlider' + servoId + '" onchange="servoAdjust(' + servoId + ',' + this.value + ')"/>';
+      row.insertCell(1).innerHTML= '<input type="range" min="110" max="500" class="slider" id="servoSlider' + servoId + '" onchange="servoAdjust(' + servoId + ',' + this.value + ')"/>';
       row.insertCell(2).innerHTML= '<p><span id="servoPos' + servoId + '"></span></p>';
       row.insertCell(3).innerHTML= '<input type="checkbox" id="servo' + servoId + '" name="servo' + servoId + '" value="servo' + servoId + '" onclick="enable_servo(' + servoId + ',this)">';
     }
@@ -173,11 +172,9 @@ String config_page = R"TEMPLATE(
 
       console.log("Export Pose");
     }
-
-
-
     </script>
 </body>
 </html>
+
 )TEMPLATE";
 

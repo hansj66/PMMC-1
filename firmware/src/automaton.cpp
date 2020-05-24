@@ -40,8 +40,8 @@ void Automaton::begin()
     // Initialize the Adafruit driver for each of the onboard PCA9685 PWM controllers
     driver_A.begin();
     driver_B.begin();
-    driver_A.setOscillatorFrequency(27000000);
-    driver_B.setOscillatorFrequency(27000000);
+    driver_A.setOscillatorFrequency(25000000);
+    driver_B.setOscillatorFrequency(25000000);
     driver_A.setPWMFreq(50);
     driver_B.setPWMFreq(50);
 
@@ -83,7 +83,7 @@ void Automaton::enable(int servoId, bool enable)
     if (enable)
         driver->setPWM(internalId, 0, _pwm[servoId]);
     else
-        driver->setPWM(internalId, 0, 0);
+        driver->setPWM(internalId, 0, 4096);
 }
 
 void Automaton::trim(int servoId, int value)
