@@ -28,8 +28,12 @@ http://pmmc-1/
 
 The same web server exposes a simple API that allows you to manipulate the servos in order to create poses. These poses can then be associated with a key and stored in NV memory.
 
-# Servo wiring
+# Recommended Servo wiring
 
-PORT	PIN	SERVO
+(ESP pointing north. Counting clockwise)
+
+## Function Port
 
 TBD
+
+

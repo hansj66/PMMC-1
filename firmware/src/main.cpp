@@ -20,6 +20,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoNvs.h>
+#include <wire.h>
 #include "automaton.h"
 
 extern String config_page;
@@ -32,9 +33,11 @@ void notFound(AsyncWebServerRequest *request)
     request->send(404, "text/plain", "Not found");
 }
 
+
 void setup() 
 {
     Serial.begin(115200);
+
 
     // Initialize the servo controller
     automaton.begin();
@@ -65,6 +68,10 @@ void setup()
 
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
+
+    // Check for the existense of a neutral/zero pose in non volatile memory.
+    // If it exists, we'll load it and update the corresponding servo positions.
+    automaton.selectPose("neutral");
 
     // http://pmmc-1 will return the configuration page. This allows the user to interactively
     // manipulate servo positions, create poses and also store this
@@ -101,20 +108,21 @@ void setup()
         String servoParam;
         char servo[5];
         String poseName = "default";
-        uint8_t parameterBlob[24];
+        uint8_t parameterBlob[MAX_SERVO_NUM];
 
         if (request->hasParam("pose")) 
         {
             poseName = request->getParam("pose")->value();
         }
 
-        for (int i=0; i<24; i++)
+        for (int i=0; i<MAX_SERVO_NUM; i++)
         {
             sprintf(servo, "s%d", i);
             if (request->hasParam(servo)) 
             {
                 servoParam = request->getParam(servo)->value();
                 parameterBlob[i] = atoi(servoParam.c_str());
+                // Serial.printf("Saving %d : %d\n", i, atoi(servoParam.c_str()));
             } 
         }
 
@@ -128,10 +136,6 @@ void setup()
     //          the sliders in the configuration page accordingly
     server.on("/load", HTTP_GET, [] (AsyncWebServerRequest *request) 
     {
-        // TODO:    1) Send parameters back to web page
-        //          2) Error if not found by name
-        //          3) Disable all servos 
-
         String poseName;
         if (request->hasParam("pose")) 
         {
@@ -143,14 +147,18 @@ void setup()
         size_t blobLength = NVS.getBlobSize(poseName);   
         Serial.printf("Size of %s pose: %d\n", poseName.c_str(), blobLength);
 
-        uint8_t parameterBlob[24];
+        uint8_t parameterBlob[MAX_SERVO_NUM];
         NVS.getBlob(poseName, parameterBlob, sizeof(parameterBlob));
-        for (int i=0; i<24; i++)
+        String responseData;
+        for (int i=0; i<MAX_SERVO_NUM; i++)
         {
-            Serial.printf("Loaded: s%d : %d\n", i, parameterBlob[i]);
+            Serial.printf("Loaded: s%d : %u\n", i, parameterBlob[i]);
+            responseData += String(parameterBlob[i]);
+            if (i < MAX_SERVO_NUM-1)
+                responseData += " ";
         }
 
-        request->send(200, "text/html", "OK");
+        request->send(200, "text/html", responseData);
     });
 
         // 1) "trim" - Adjusts servo position according to corresponding slider in configuration page

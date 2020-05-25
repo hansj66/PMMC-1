@@ -52,9 +52,9 @@ String config_page = R"TEMPLATE(
 
     <table id="servotable" style="width:100%">
       <tr>
-        <th>Id</th>
+        <th>PORT</th>
         <th>Adjust</th>
-        <th>Position</th>
+        <th>Degrees</th>
         <th>Enable</th>
       </tr>
     </table>  
@@ -70,15 +70,14 @@ String config_page = R"TEMPLATE(
       
       var row = table.insertRow(rowCount);
 
-      if (servoId < 8)
-        row.insertCell(0).innerHTML= 'Hip (#' + servoId + ')';
-      else if (servoId < 16)
-        row.insertCell(0).innerHTML= 'Knee (#' + servoId + ')';
-      else if (servoId < 24)
-      row.insertCell(0).innerHTML= 'Ankle (#' + servoId + ')';
+      let pins = ['A.1', 'A.2', 'A.3', 'A.4', 'A.5', 'A.6', 'A.7', 'A.8', 
+                  'B.1', 'B.2', 'B.3', 'B.4', 'B.5', 'B.6', 'B.7', 'B.8', 
+                  'C.1', 'C.2', 'C.3', 'C.4', 'C.5', 'C.6', 'C.7', 'C.8', 
+                  'D.1', 'D.2', 'D.3', 'D.4', 'D.5', 'D.6', 'D.7', 'D.8']
 
+      row.insertCell(0).innerHTML= pins[servoId];
 
-      row.insertCell(1).innerHTML= '<input type="range" min="110" max="500" class="slider" id="servoSlider' + servoId + '" onchange="servoAdjust(' + servoId + ',' + this.value + ')"/>';
+      row.insertCell(1).innerHTML= '<input type="range" min="0" max="90" class="slider" id="servoSlider' + servoId + '" onchange="servoAdjust(' + servoId + ')"/>';
       row.insertCell(2).innerHTML= '<p><span id="servoPos' + servoId + '"></span></p>';
       row.insertCell(3).innerHTML= '<input type="checkbox" id="servo' + servoId + '" name="servo' + servoId + '" value="servo' + servoId + '" onclick="enable_servo(' + servoId + ',this)">';
     }
@@ -95,7 +94,7 @@ String config_page = R"TEMPLATE(
       }
     }
 
-    for (i = 0; i < 24; i++) 
+    for (i = 0; i < 32; i++) 
     {
       addServoControl(i);
       displayServoPosition(i);
@@ -105,7 +104,8 @@ String config_page = R"TEMPLATE(
     console.log(table)
 
     $.ajaxSetup({timeout:1000});
-    function servoAdjust(id, pos) 
+
+    function servoTrim(id)
     {
       var slider = document.getElementById("servoSlider" + id);
       var servoP = document.getElementById("servoPos" + id);
@@ -118,11 +118,17 @@ String config_page = R"TEMPLATE(
       }
 
       $.get("/trim?id=" + id + "&pos=" + slider.value); 
+    }
+
+    function servoAdjust(id) 
+    {
+      servoTrim(id);
       {Connection: close};
     }
   
     function enable_servo(id, cb) 
     {
+      servoTrim(id);
       $.get("/enable?id=" + id + "&enable=" + cb.checked);
       {Connection: close};
     }
@@ -131,13 +137,13 @@ String config_page = R"TEMPLATE(
     {
       console.log("Flash Save");
       var params
-      for (i=0; i<24; i++)
+      for (i=0; i<32; i++)
       {
         var slider = document.getElementById("servoSlider" + i);
         prefix = "s" + i + "="
         if (i==0)
           params = prefix + slider.value + '&'
-        else if (i<23)
+        else if (i<31)
           params += prefix + slider.value + '&'
         else
           params += prefix + slider.value
@@ -156,6 +162,15 @@ String config_page = R"TEMPLATE(
       var poseName = document.getElementById("poseName");
       $.get("/load?pose=" + poseName.value, function(data, status) 
       {
+        var degrees = data.split(" ");
+        console.log("Degrees array size: " + degrees.length)
+        for (i=0; i<32; i++)
+        {
+          console.log("Servo #" + i + " degrees: " + degrees[i]);
+          var slider = document.getElementById("servoSlider" + i);
+
+          slider.value = degrees[i];
+        }
         console.log("Data:" + data);
         console.log("Status:" + status);
       });
@@ -164,6 +179,7 @@ String config_page = R"TEMPLATE(
       var servoP = document.getElementById("servoPos0");
       slider.value = 180;
       servoP.innerHTML = 180;
+      {Connection: close};
     }
 
     function ExportPose() 

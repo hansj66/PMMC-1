@@ -18,9 +18,9 @@
 
 const int MAX_SERVO_NUM = 32;
 
-const int SERVOMIN = 204;
-const int SERVOMAX = 409;
-const int SERVOMID = (SERVOMAX + SERVOMIN) / 2;
+const int SERVO_MIN = 200;
+const int SERVO_MAX = 400;
+const int SERVO_MID = (SERVO_MAX + SERVO_MIN) / 2;
 
 class Automaton
 {
@@ -28,7 +28,9 @@ class Automaton
         Automaton();
         void begin();
         void enable(int servoId, bool enable);
-        void trim(int servoId, int value);
+        void trim(int servoId, int degrees);
+
+        void selectPose(String name);
 
     private:
         int _pwm[MAX_SERVO_NUM];
